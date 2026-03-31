@@ -62,13 +62,24 @@ DB_PASS=
 
 ### 4. Crear la base de datos
 
-Importar el esquema SQL desde phpMyAdmin o por terminal:
+**Opción A — Importar el dump completo (recomendado):**
+
+El archivo `estantes_db.sql` contiene la estructura completa + datos existentes exportados desde phpMyAdmin.
+
+Desde phpMyAdmin:
+1. Abrir `http://localhost/phpmyadmin`
+2. Crear una base de datos llamada `estantes_db`
+3. Ir a la pestaña **Importar**
+4. Seleccionar el archivo `estantes_db.sql` y ejecutar
+
+O por terminal de XAMPP:
 
 ```bash
-mysql -u root < database.sql
+c:\xampp\mysql\bin\mysql.exe -u root -e "CREATE DATABASE IF NOT EXISTS estantes_db;"
+c:\xampp\mysql\bin\mysql.exe -u root estantes_db < estantes_db.sql
 ```
 
-O desde la terminal de XAMPP:
+**Opción B — Solo estructura + datos de ejemplo:**
 
 ```bash
 c:\xampp\mysql\bin\mysql.exe -u root < database.sql
@@ -91,7 +102,8 @@ ItemMap/
 ├── index.html      # Frontend completo (HTML + CSS + JS)
 ├── api.php         # API REST en PHP
 ├── config.php      # Conexión a base de datos (lee .env)
-├── database.sql    # Esquema SQL + datos de ejemplo
+├── database.sql      # Esquema SQL + datos de ejemplo
+├── estantes_db.sql   # Dump completo de phpMyAdmin (estructura + datos)
 ├── .env            # Variables de entorno (no se sube al repo)
 ├── .env.example    # Plantilla de variables de entorno
 ├── .htaccess       # Protege el archivo .env de acceso web
