@@ -71,7 +71,7 @@
         .mapa-canvas-wrap { border: 2px solid #334155; border-radius: 16px; background: #0b1120; overflow: auto; padding: 8px; }
         .mapa-grid-table { border-collapse: collapse; margin: 0 auto; }
         .mapa-grid-table td, .mapa-grid-table th { padding: 4px; text-align: center; vertical-align: middle; }
-        .mapa-header-cell { color: #94a3b8; font-size: 13px; font-weight: 700; min-width: 40px; padding: 10px 8px !important; }
+        .mapa-header-cell { color: #475569; font-size: 28px; font-weight: 900; min-width: 50px; padding: 12px 10px !important; text-align: center; }
         .mapa-header-col { border-bottom: 2px solid #334155; background: #0f172a; position: sticky; top: 0; z-index: 2; }
         .mapa-header-row { border-right: 2px solid #334155; background: #0f172a; position: sticky; left: 0; z-index: 2; }
         .mapa-corner { background: #0f172a; position: sticky; top: 0; left: 0; z-index: 3; }
@@ -83,7 +83,7 @@
         .mapa-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,.4); transform: translateY(-2px); }
         .mapa-card .code { font-size: 17px; font-weight: 800; }
         .mapa-card .desc { font-size: 10px; opacity: .7; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
-        .mapa-card .pos-label { font-size: 10px; color: #fbbf24; font-weight: 600; margin-top: 3px; font-family: monospace; }
+        .mapa-card .pos-label { font-size: 13px; color: rgba(255,255,255,.35); font-weight: 800; margin-top: 2px; font-family: monospace; letter-spacing: 1px; }
         .mapa-card .count { margin-top: 4px; font-size: 15px; font-weight: 700; }
         .mapa-card .count-label { font-size: 9px; opacity: .6; text-transform: uppercase; letter-spacing: .04em; }
         .mapa-card-bg { position: absolute; right: -6px; bottom: -8px; font-size: 42px; font-weight: 900; opacity: .08; pointer-events: none; }
@@ -107,14 +107,32 @@
         }
         .mapa-card.selected { border-color: #fff !important; z-index: 6; }
 
-        /* ── DETAIL SIDEBAR ── */
-        .detail-panel { background: #1e293b; border-radius: 12px; padding: 24px; margin-top: 24px; border: 1px solid #334155; display: none; }
-        .detail-panel.show { display: block; }
-        .detail-panel h3 { margin-bottom: 16px; color: #60a5fa; }
-        .detail-list { list-style: none; }
-        .detail-list li { padding: 8px 0; border-bottom: 1px solid #334155; font-size: 14px; display: flex; justify-content: space-between; }
-        .detail-list li:last-child { border-bottom: none; }
-        .detail-list .item-code { color: #94a3b8; font-family: monospace; }
+        /* ── DETAIL MODAL ── */
+        .detail-modal .modal { max-width: 600px; max-height: 80vh; display: flex; flex-direction: column; }
+        .detail-modal .modal h2 { margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
+        .detail-modal .modal h2 .ubic-badge { font-size: 14px; padding: 4px 12px; border-radius: 20px; font-weight: 600; }
+        .detail-article-list { list-style: none; overflow-y: auto; flex: 1; }
+        .detail-article-list li { padding: 14px 16px; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; transition: background .15s; }
+        .detail-article-list li:hover { background: #334155; }
+        .detail-article-list li:last-child { border-bottom: none; }
+        .detail-article-list .art-info { display: flex; flex-direction: column; gap: 4px; }
+        .detail-article-list .art-desc { font-size: 15px; font-weight: 500; }
+        .detail-article-list .art-meta { font-size: 12px; color: #94a3b8; display: flex; gap: 8px; align-items: center; }
+        .detail-article-list .art-code { color: #60a5fa; font-family: monospace; font-size: 14px; font-weight: 600; }
+        .detail-empty { text-align: center; padding: 40px 20px; color: #64748b; }
+        .detail-empty-icon { font-size: 48px; margin-bottom: 12px; }
+
+        /* ── MAP PICKER MODAL ── */
+        .picker-modal .modal { max-width: 90vw; max-height: 85vh; display: flex; flex-direction: column; width: 900px; }
+        .picker-modal .modal h2 { margin-bottom: 12px; }
+        .picker-grid-wrap { overflow: auto; flex: 1; border: 1px solid #334155; border-radius: 10px; background: #0b1120; padding: 8px; }
+        .picker-card { cursor: pointer; transition: all .2s; }
+        .picker-card:hover { transform: scale(1.08); box-shadow: 0 0 20px rgba(96,165,250,.4); }
+        .picker-card.picker-selected { border-color: #10b981 !important; box-shadow: 0 0 20px rgba(16,185,129,.5); }
+        .picker-no-ubic { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+        .picker-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; gap: 12px; }
+        .picker-selected-label { font-size: 14px; color: #94a3b8; flex: 1; }
+        .picker-selected-label strong { color: #10b981; }
 
         /* ── RESPONSIVE ── */
         @media (max-width: 640px) {
@@ -193,10 +211,6 @@
         <div class="mapa-canvas-wrap">
             <div id="mapaCanvas"></div>
         </div>
-        <div id="detailPanel" class="detail-panel">
-            <h3 id="detailTitle">—</h3>
-            <ul id="detailList" class="detail-list"></ul>
-        </div>
     </div>
 
     <!-- ══ PANEL UBICACIONES ══ -->
@@ -239,9 +253,11 @@
         </div>
         <div class="form-group">
             <label>Ubicación</label>
-            <select id="artUbicacion">
-                <option value="">Sin ubicación</option>
-            </select>
+            <input type="hidden" id="artUbicacion" value="">
+            <div id="artUbicacionDisplay" onclick="abrirMapaPicker()" style="padding:10px 14px; border-radius:8px; border:1px solid #334155; background:#0f172a; color:#94a3b8; cursor:pointer; display:flex; justify-content:space-between; align-items:center; font-size:14px; transition: border-color .2s;">
+                <span id="artUbicacionText">Sin ubicación — Clic para elegir en el mapa</span>
+                <span style="font-size:18px">🗺️</span>
+            </div>
         </div>
         <div class="form-group">
             <label>Notas</label>
@@ -284,6 +300,33 @@
         <div class="form-actions">
             <button class="btn btn-ghost" onclick="cerrarModalUbicacion()">Cancelar</button>
             <button class="btn btn-success" onclick="guardarUbicacion()">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<!-- ══ MODAL DETALLE UBICACIÓN ══ -->
+<div id="modalDetalle" class="modal-overlay detail-modal">
+    <div class="modal">
+        <h2 id="detalleTitle">
+            <span id="detalleTitleText">Artículos</span>
+        </h2>
+        <ul id="detalleList" class="detail-article-list"></ul>
+        <div class="form-actions" style="margin-top:16px;">
+            <button class="btn btn-ghost" onclick="cerrarModalDetalle()">Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<!-- ══ MODAL MAP PICKER ══ -->
+<div id="modalMapPicker" class="modal-overlay picker-modal">
+    <div class="modal">
+        <h2>Elegir Ubicación</h2>
+        <div class="picker-grid-wrap" id="pickerGrid"></div>
+        <div class="picker-footer">
+            <div class="picker-selected-label" id="pickerSelectedLabel">Ninguna ubicación seleccionada</div>
+            <button class="btn btn-ghost" onclick="cerrarMapaPicker()">Cancelar</button>
+            <button class="btn btn-ghost" onclick="pickerSinUbicacion()">Sin ubicación</button>
+            <button class="btn btn-success" onclick="confirmarMapaPicker()">Confirmar</button>
         </div>
     </div>
 </div>
@@ -367,6 +410,9 @@ function abrirModalCrear() {
     document.getElementById('artDescripcion').value = '';
     document.getElementById('artMedida').value = '';
     document.getElementById('artUbicacion').value = '';
+    document.getElementById('artUbicacionText').textContent = 'Sin ubicación — Clic para elegir en el mapa';
+    document.getElementById('artUbicacionDisplay').style.borderColor = '#334155';
+    document.getElementById('artUbicacionDisplay').style.color = '#94a3b8';
     document.getElementById('artNotas').value = '';
     document.getElementById('modalArticulo').classList.add('show');
     document.getElementById('artCodigo').focus();
@@ -379,6 +425,15 @@ function editarArticulo(a) {
     document.getElementById('artDescripcion').value = a.descripcion;
     document.getElementById('artMedida').value = a.medida || '';
     document.getElementById('artUbicacion').value = a.ubicacion_id || '';
+    if (a.ubicacion_codigo) {
+        document.getElementById('artUbicacionText').textContent = `📍 ${a.ubicacion_codigo}`;
+        document.getElementById('artUbicacionDisplay').style.borderColor = '#10b981';
+        document.getElementById('artUbicacionDisplay').style.color = '#e2e8f0';
+    } else {
+        document.getElementById('artUbicacionText').textContent = 'Sin ubicación — Clic para elegir en el mapa';
+        document.getElementById('artUbicacionDisplay').style.borderColor = '#334155';
+        document.getElementById('artUbicacionDisplay').style.color = '#94a3b8';
+    }
     document.getElementById('artNotas').value = a.notas || '';
     document.getElementById('modalArticulo').classList.add('show');
 }
@@ -445,10 +500,6 @@ async function cargarUbicacionesSelect() {
     const opts = '<option value="">Todas las ubicaciones</option>' +
         ubicacionesCache.map(u => `<option value="${esc(u.codigo)}">${esc(u.codigo)} - ${esc(u.descripcion)}</option>`).join('');
     document.getElementById('selUbicacion').innerHTML = opts;
-
-    const opts2 = '<option value="">Sin ubicación</option>' +
-        ubicacionesCache.map(u => `<option value="${u.id}">${esc(u.codigo)} - ${esc(u.descripcion)}</option>`).join('');
-    document.getElementById('artUbicacion').innerHTML = opts2;
 }
 
 async function cargarUbicacionesPanel() {
@@ -591,21 +642,21 @@ function renderMapa() {
     let html = '<table class="mapa-grid-table"><thead><tr>';
     html += '<th class="mapa-header-cell mapa-corner"></th>';
     for (let c = 1; c <= maxCol; c++) {
-        html += `<th class="mapa-header-cell mapa-header-col">Col ${c}</th>`;
+        html += `<th class="mapa-header-cell mapa-header-col">${c}</th>`;
     }
     html += '</tr></thead><tbody>';
 
     for (let f = 1; f <= maxFila; f++) {
-        html += `<tr><td class="mapa-header-cell mapa-header-row">Fila ${f}</td>`;
+        html += `<tr><td class="mapa-header-cell mapa-header-row">${f}</td>`;
         for (let c = 1; c <= maxCol; c++) {
             const u = grid[`${f}-${c}`];
             if (u) {
                 html += `<td class="mapa-cell">
-                    <div class="mapa-card" data-id="${u.id}" data-codigo="${esc(u.codigo)}" onclick="verDetalleMapa('${esc(u.codigo)}')"
+                    <div class="mapa-card" data-id="${u.id}" data-codigo="${esc(u.codigo)}" onclick="abrirModalDetalle('${esc(u.codigo)}')"
                          style="background:${esc(u.color)}20; border-color:${esc(u.color)}40">
                         <div class="code" style="color:${esc(u.color)}">${esc(u.codigo)}</div>
                         <div class="desc">${esc(u.descripcion)}</div>
-                        <div class="pos-label">📍 F${u.fila} × C${u.columna}</div>
+                        <div class="pos-label">${u.fila}×${u.columna}</div>
                         <div class="count">${u.total_articulos}</div>
                         <div class="count-label">artículo${u.total_articulos != 1 ? 's' : ''}</div>
                         <div class="mapa-card-bg" style="color:${esc(u.color)}">${esc(u.codigo)}</div>
@@ -621,10 +672,10 @@ function renderMapa() {
 
     if (withoutGrid.length > 0) {
         html += `<div style="padding:16px; border-top:1px solid #334155; margin-top:8px;">
-            <div style="font-size:13px; color:#94a3b8; margin-bottom:10px;">⚠️ Sin fila/columna asignada (edítalas en Ubicaciones):</div>
+            <div style="font-size:13px; color:#94a3b8; margin-bottom:10px;"></div>
             <div style="display:flex; flex-wrap:wrap; gap:8px;">`;
         withoutGrid.forEach(u => {
-            html += `<div class="mapa-card" data-id="${u.id}" data-codigo="${esc(u.codigo)}" onclick="verDetalleMapa('${esc(u.codigo)}')"
+            html += `<div class="mapa-card" data-id="${u.id}" data-codigo="${esc(u.codigo)}" onclick="abrirModalDetalle('${esc(u.codigo)}')"
                  style="background:${esc(u.color)}20; border-color:${esc(u.color)}40">
                 <div class="code" style="color:${esc(u.color)}">${esc(u.codigo)}</div>
                 <div class="desc">${esc(u.descripcion)}</div>
@@ -640,11 +691,161 @@ function renderMapa() {
 }
 
 function verDetalleMapa(codigoUbicacion) {
-    // Select card
+    abrirModalDetalle(codigoUbicacion);
+}
+
+// ── MODAL DETALLE UBICACIÓN ──
+async function abrirModalDetalle(codigoUbicacion) {
+    // Highlight card
     document.querySelectorAll('.mapa-card').forEach(c => c.classList.remove('selected'));
     const card = document.querySelector(`.mapa-card[data-codigo="${codigoUbicacion}"]`);
     if (card) card.classList.add('selected');
-    verDetalle(codigoUbicacion);
+
+    const res = await fetch(`${API}?action=listar&ubicacion=${encodeURIComponent(codigoUbicacion)}`);
+    const datos = await res.json();
+    const ubic = mapaData.find(u => u.codigo === codigoUbicacion);
+    const posInfo = ubic && ubic.fila && ubic.columna ? ` — ${ubic.fila}×${ubic.columna}` : '';
+    const color = ubic ? ubic.color : '#3b82f6';
+
+    document.getElementById('detalleTitleText').innerHTML =
+        `<span class="ubic-badge" style="background:${color}30; color:${color}">${codigoUbicacion}</span> ${ubic ? esc(ubic.descripcion) : ''}${posInfo}`;
+
+    if (datos.length === 0) {
+        document.getElementById('detalleList').innerHTML = `
+            <div class="detail-empty">
+                <div class="detail-empty-icon">📭</div>
+                <div>Sin artículos en esta ubicación</div>
+            </div>`;
+    } else {
+        document.getElementById('detalleList').innerHTML = datos.map(a => `
+            <li>
+                <div class="art-info">
+                    <span class="art-desc">${esc(a.descripcion)}</span>
+                    <div class="art-meta">
+                        ${a.medida ? `<span class="badge" style="background:#8b5cf620;color:#8b5cf6;font-size:11px">${esc(a.medida)}</span>` : ''}
+                        ${a.notas ? `<span>${esc(a.notas)}</span>` : ''}
+                    </div>
+                </div>
+                <span class="art-code">${esc(a.codigo)}</span>
+            </li>
+        `).join('');
+    }
+    document.getElementById('modalDetalle').classList.add('show');
+}
+
+function cerrarModalDetalle() {
+    document.getElementById('modalDetalle').classList.remove('show');
+    document.querySelectorAll('.mapa-card').forEach(c => c.classList.remove('selected'));
+}
+
+// ── MAP PICKER (para elegir ubicación al crear/editar artículo) ──
+let pickerSelectedUbicId = null;
+let pickerSelectedUbicCode = '';
+
+async function abrirMapaPicker() {
+    const res = await fetch(`${API}?action=mapa`);
+    const mapaPicker = await res.json();
+
+    let maxFila = 0, maxCol = 0;
+    const withGrid = mapaPicker.filter(u => u.fila && u.columna);
+    const withoutGrid = mapaPicker.filter(u => !u.fila || !u.columna);
+    withGrid.forEach(u => {
+        if (parseInt(u.fila) > maxFila) maxFila = parseInt(u.fila);
+        if (parseInt(u.columna) > maxCol) maxCol = parseInt(u.columna);
+    });
+
+    const grid = {};
+    withGrid.forEach(u => { grid[`${u.fila}-${u.columna}`] = u; });
+
+    let html = '';
+    if (maxFila > 0 && maxCol > 0) {
+        html = '<table class="mapa-grid-table"><thead><tr><th class="mapa-header-cell mapa-corner"></th>';
+        for (let c = 1; c <= maxCol; c++) html += `<th class="mapa-header-cell mapa-header-col">${c}</th>`;
+        html += '</tr></thead><tbody>';
+        for (let f = 1; f <= maxFila; f++) {
+            html += `<tr><td class="mapa-header-cell mapa-header-row">${f}</td>`;
+            for (let c = 1; c <= maxCol; c++) {
+                const u = grid[`${f}-${c}`];
+                if (u) {
+                    html += `<td class="mapa-cell">
+                        <div class="mapa-card picker-card" data-ubic-id="${u.id}" data-ubic-code="${esc(u.codigo)}"
+                             onclick="seleccionarPickerCard(this, ${u.id}, '${esc(u.codigo)}')"
+                             style="background:${esc(u.color)}20; border-color:${esc(u.color)}40">
+                            <div class="code" style="color:${esc(u.color)}">${esc(u.codigo)}</div>
+                            <div class="pos-label">${u.fila}×${u.columna}</div>
+                            <div class="count">${u.total_articulos}</div>
+                            <div class="count-label">artículo${u.total_articulos != 1 ? 's' : ''}</div>
+                        </div></td>`;
+                } else {
+                    html += '<td class="mapa-cell"><div class="mapa-empty-cell"></div></td>';
+                }
+            }
+            html += '</tr>';
+        }
+        html += '</tbody></table>';
+    }
+
+    if (withoutGrid.length > 0) {
+        html += '<div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; padding-top:12px; border-top:1px solid #334155;">';
+        withoutGrid.forEach(u => {
+            html += `<div class="mapa-card picker-card" data-ubic-id="${u.id}" data-ubic-code="${esc(u.codigo)}"
+                 onclick="seleccionarPickerCard(this, ${u.id}, '${esc(u.codigo)}')"
+                 style="background:${esc(u.color)}20; border-color:${esc(u.color)}40">
+                <div class="code" style="color:${esc(u.color)}">${esc(u.codigo)}</div>
+                <div class="count">${u.total_articulos}</div>
+                <div class="count-label">artículo${u.total_articulos != 1 ? 's' : ''}</div>
+            </div>`;
+        });
+        html += '</div>';
+    }
+
+    document.getElementById('pickerGrid').innerHTML = html;
+
+    // Pre-select current
+    const currentId = document.getElementById('artUbicacion').value;
+    pickerSelectedUbicId = currentId ? parseInt(currentId) : null;
+    pickerSelectedUbicCode = '';
+    if (pickerSelectedUbicId) {
+        const card = document.querySelector(`.picker-card[data-ubic-id="${pickerSelectedUbicId}"]`);
+        if (card) {
+            card.classList.add('picker-selected');
+            pickerSelectedUbicCode = card.dataset.ubicCode;
+            document.getElementById('pickerSelectedLabel').innerHTML = `Seleccionada: <strong>${esc(pickerSelectedUbicCode)}</strong>`;
+        }
+    } else {
+        document.getElementById('pickerSelectedLabel').textContent = 'Ninguna ubicación seleccionada';
+    }
+
+    document.getElementById('modalMapPicker').classList.add('show');
+}
+
+function seleccionarPickerCard(el, id, code) {
+    document.querySelectorAll('.picker-card').forEach(c => c.classList.remove('picker-selected'));
+    el.classList.add('picker-selected');
+    pickerSelectedUbicId = id;
+    pickerSelectedUbicCode = code;
+    document.getElementById('pickerSelectedLabel').innerHTML = `Seleccionada: <strong>${esc(code)}</strong>`;
+}
+
+function pickerSinUbicacion() {
+    pickerSelectedUbicId = null;
+    pickerSelectedUbicCode = '';
+    document.querySelectorAll('.picker-card').forEach(c => c.classList.remove('picker-selected'));
+    document.getElementById('pickerSelectedLabel').textContent = 'Sin ubicación';
+}
+
+function confirmarMapaPicker() {
+    document.getElementById('artUbicacion').value = pickerSelectedUbicId || '';
+    document.getElementById('artUbicacionText').textContent = pickerSelectedUbicCode
+        ? `📍 ${pickerSelectedUbicCode}`
+        : 'Sin ubicación — Clic para elegir en el mapa';
+    document.getElementById('artUbicacionDisplay').style.borderColor = pickerSelectedUbicCode ? '#10b981' : '#334155';
+    document.getElementById('artUbicacionDisplay').style.color = pickerSelectedUbicCode ? '#e2e8f0' : '#94a3b8';
+    cerrarMapaPicker();
+}
+
+function cerrarMapaPicker() {
+    document.getElementById('modalMapPicker').classList.remove('show');
 }
 
 // ── BÚSQUEDA EN MAPA ──
@@ -699,27 +900,7 @@ async function buscarEnMapa() {
 }
 
 async function verDetalle(codigoUbicacion) {
-    const res = await fetch(`${API}?action=listar&ubicacion=${encodeURIComponent(codigoUbicacion)}`);
-    const datos = await res.json();
-
-    // Buscar info de ubicación en mapaData
-    const ubic = mapaData.find(u => u.codigo === codigoUbicacion);
-    const posInfo = ubic && ubic.fila && ubic.columna ? ` (Fila ${ubic.fila} × Columna ${ubic.columna})` : '';
-
-    const panel = document.getElementById('detailPanel');
-    document.getElementById('detailTitle').textContent = `Artículos en ${codigoUbicacion}${posInfo}`;
-
-    if (datos.length === 0) {
-        document.getElementById('detailList').innerHTML = '<li style="color:#64748b">Sin artículos en esta ubicación</li>';
-    } else {
-        document.getElementById('detailList').innerHTML = datos.map(a => `
-            <li>
-                <span>${esc(a.descripcion)}${a.medida ? ` <span class="badge" style="background:#8b5cf620;color:#8b5cf6;font-size:11px">${esc(a.medida)}</span>` : ''}</span>
-                <span class="item-code">${esc(a.codigo)}</span>
-            </li>
-        `).join('');
-    }
-    panel.classList.add('show');
+    abrirModalDetalle(codigoUbicacion);
 }
 
 // ── UTILS ──
@@ -741,6 +922,8 @@ document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
         cerrarModal();
         cerrarModalUbicacion();
+        cerrarModalDetalle();
+        cerrarMapaPicker();
     }
 });
 </script>

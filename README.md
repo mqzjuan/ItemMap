@@ -4,7 +4,7 @@ Aplicación web para gestionar y ubicar artículos rápidamente en estantes, mue
 
 ## Descripción
 
-**ItemMap** (anteriormente "Estantes") permite:
+**ItemMap** permite:
 
 - **Crear artículos** con código, descripción, tipo de medida (blister, caja, unidad, etc.) y asignarlos a una ubicación.
 - **Buscar artículos** en tiempo real por código o descripción, con filtro por ubicación.
