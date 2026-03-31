@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estantes - Ubicación de Artículos</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+
+        /* ── NAV ── */
+        .nav { background: #1e293b; padding: 12px 24px; display: flex; align-items: center; gap: 16px; border-bottom: 1px solid #334155; }
+        .nav h1 { font-size: 20px; color: #60a5fa; }
+        .nav-tabs { display: flex; gap: 4px; margin-left: 32px; }
+        .nav-tab { padding: 8px 20px; border-radius: 8px 8px 0 0; cursor: pointer; font-size: 14px; background: transparent; border: none; color: #94a3b8; transition: all .2s; }
+        .nav-tab:hover { color: #e2e8f0; background: #334155; }
+        .nav-tab.active { background: #334155; color: #60a5fa; font-weight: 600; }
+
+        /* ── LAYOUT ── */
+        .container { max-width: 1400px; margin: 0 auto; padding: 24px; }
+        .panel { display: none; }
+        .panel.active { display: block; }
+
+        /* ── SEARCH BAR ── */
+        .search-bar { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+        .search-bar input, .search-bar select {
+            padding: 10px 16px; border-radius: 8px; border: 1px solid #334155;
+            background: #1e293b; color: #e2e8f0; font-size: 14px; outline: none;
+        }
+        .search-bar input:focus, .search-bar select:focus { border-color: #60a5fa; }
+        .search-bar input { flex: 1; min-width: 250px; }
+        .search-bar select { min-width: 160px; }
+
+        /* ── BUTTONS ── */
+        .btn { padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-size: 14px; font-weight: 500; transition: all .15s; }
+        .btn-primary { background: #3b82f6; color: white; }
+        .btn-primary:hover { background: #2563eb; }
+        .btn-success { background: #10b981; color: white; }
+        .btn-success:hover { background: #059669; }
+        .btn-danger { background: #ef4444; color: white; }
+        .btn-danger:hover { background: #dc2626; }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+        .btn-ghost { background: transparent; color: #94a3b8; border: 1px solid #334155; }
+        .btn-ghost:hover { background: #334155; color: #e2e8f0; }
+
+        /* ── TABLE ── */
+        .table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid #334155; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #1e293b; padding: 12px 16px; text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: #94a3b8; position: sticky; top: 0; }
+        td { padding: 12px 16px; border-top: 1px solid #1e293b; font-size: 14px; }
+        tr:hover td { background: #1e293b40; }
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .no-results { text-align: center; padding: 48px; color: #64748b; }
+
+        /* ── MODAL ── */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 100; align-items: center; justify-content: center; }
+        .modal-overlay.show { display: flex; }
+        .modal { background: #1e293b; border-radius: 16px; padding: 32px; width: 100%; max-width: 500px; border: 1px solid #334155; }
+        .modal h2 { margin-bottom: 24px; font-size: 18px; color: #f1f5f9; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; margin-bottom: 6px; font-size: 13px; color: #94a3b8; font-weight: 500; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid #334155;
+            background: #0f172a; color: #e2e8f0; font-size: 14px; outline: none; font-family: inherit;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #60a5fa; }
+        .form-group textarea { resize: vertical; min-height: 70px; }
+        .form-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; }
+
+        /* ── VISUAL MAP ── */
+        .mapa-canvas-wrap { border: 2px solid #334155; border-radius: 16px; background: #0b1120; overflow: auto; padding: 8px; }
+        .mapa-grid-table { border-collapse: collapse; margin: 0 auto; }
+        .mapa-grid-table td, .mapa-grid-table th { padding: 4px; text-align: center; vertical-align: middle; }
+        .mapa-header-cell { color: #94a3b8; font-size: 13px; font-weight: 700; min-width: 40px; padding: 10px 8px !important; }
+        .mapa-header-col { border-bottom: 2px solid #334155; background: #0f172a; position: sticky; top: 0; z-index: 2; }
+        .mapa-header-row { border-right: 2px solid #334155; background: #0f172a; position: sticky; left: 0; z-index: 2; }
+        .mapa-corner { background: #0f172a; position: sticky; top: 0; left: 0; z-index: 3; }
+        .mapa-cell { padding: 6px !important; }
+        .mapa-card {
+            width: 140px; min-height: 90px; border-radius: 10px; padding: 10px; cursor: pointer;
+            transition: box-shadow .2s, transform .2s; border: 2px solid transparent; overflow: hidden; user-select: none; position: relative;
+        }
+        .mapa-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,.4); transform: translateY(-2px); }
+        .mapa-card .code { font-size: 17px; font-weight: 800; }
+        .mapa-card .desc { font-size: 10px; opacity: .7; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
+        .mapa-card .pos-label { font-size: 10px; color: #fbbf24; font-weight: 600; margin-top: 3px; font-family: monospace; }
+        .mapa-card .count { margin-top: 4px; font-size: 15px; font-weight: 700; }
+        .mapa-card .count-label { font-size: 9px; opacity: .6; text-transform: uppercase; letter-spacing: .04em; }
+        .mapa-card-bg { position: absolute; right: -6px; bottom: -8px; font-size: 42px; font-weight: 900; opacity: .08; pointer-events: none; }
+        .mapa-toolbar { display: flex; gap: 12px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+        .mapa-search-bar { display: flex; gap: 10px; flex: 1; min-width: 250px; }
+        .mapa-search-bar input { flex: 1; padding: 10px 16px; border-radius: 8px; border: 1px solid #334155; background: #1e293b; color: #e2e8f0; font-size: 14px; outline: none; }
+        .mapa-search-bar input:focus { border-color: #60a5fa; }
+        .mapa-empty-cell { width: 140px; height: 90px; border: 1px dashed #334155; border-radius: 10px; opacity: .3; }
+
+        /* Highlight animation for search results */
+        @keyframes pulseHighlight {
+            0%   { box-shadow: 0 0 0 0 rgba(16,185,129,.8); transform: scale(1); }
+            50%  { box-shadow: 0 0 25px 10px rgba(16,185,129,.5); transform: scale(1.05); }
+            100% { box-shadow: 0 0 0 0 rgba(16,185,129,.8); transform: scale(1); }
+        }
+        .mapa-card.highlighted {
+            border-color: #10b981 !important;
+            background: rgba(16,185,129,.15) !important;
+            animation: pulseHighlight 1s ease-in-out infinite;
+            z-index: 10;
+        }
+        .mapa-card.selected { border-color: #fff !important; z-index: 6; }
+
+        /* ── DETAIL SIDEBAR ── */
+        .detail-panel { background: #1e293b; border-radius: 12px; padding: 24px; margin-top: 24px; border: 1px solid #334155; display: none; }
+        .detail-panel.show { display: block; }
+        .detail-panel h3 { margin-bottom: 16px; color: #60a5fa; }
+        .detail-list { list-style: none; }
+        .detail-list li { padding: 8px 0; border-bottom: 1px solid #334155; font-size: 14px; display: flex; justify-content: space-between; }
+        .detail-list li:last-child { border-bottom: none; }
+        .detail-list .item-code { color: #94a3b8; font-family: monospace; }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 640px) {
+            .container { padding: 12px; }
+            .nav { flex-wrap: wrap; }
+            .nav-tabs { margin-left: 0; width: 100%; }
+            .mapa-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+        }
+
+        /* ── TOAST ── */
+        .toast { position: fixed; bottom: 24px; right: 24px; padding: 12px 24px; border-radius: 8px; color: white; font-size: 14px; z-index: 200; transform: translateY(80px); opacity: 0; transition: all .3s; }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast-success { background: #10b981; }
+        .toast-error { background: #ef4444; }
+
+        /* ── UBICACIONES PANEL ── */
+        .ubic-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+        .ubic-card { background: #1e293b; border-radius: 10px; padding: 16px; display: flex; align-items: center; gap: 12px; border: 1px solid #334155; }
+        .ubic-dot { width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0; }
+        .ubic-info { flex: 1; }
+        .ubic-code { font-weight: 700; font-size: 16px; }
+        .ubic-desc { font-size: 12px; color: #94a3b8; }
+        .ubic-count { font-size: 12px; color: #64748b; }
+    </style>
+</head>
+<body>
+
+<nav class="nav">
+    <h1>📦 Estantes</h1>
+    <div class="nav-tabs">
+        <button class="nav-tab active" data-panel="articulos">Artículos</button>
+        <button class="nav-tab" data-panel="mapa">Mapa Visual</button>
+        <button class="nav-tab" data-panel="ubicaciones">Ubicaciones</button>
+    </div>
+</nav>
+
+<div class="container">
+    <!-- ══ PANEL ARTÍCULOS ══ -->
+    <div id="panel-articulos" class="panel active">
+        <div class="search-bar">
+            <input type="text" id="txtBuscar" placeholder="🔍 Buscar por código o descripción..." autofocus>
+            <select id="selUbicacion">
+                <option value="">Todas las ubicaciones</option>
+            </select>
+            <button class="btn btn-primary" onclick="abrirModalCrear()">+ Nuevo artículo</button>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Descripción</th>
+                        <th>Medida</th>
+                        <th>Ubicación</th>
+                        <th>Fila×Col</th>
+                        <th>Notas</th>
+                        <th style="width:120px">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaArticulos"></tbody>
+            </table>
+        </div>
+        <div id="sinResultados" class="no-results" style="display:none">
+            No se encontraron artículos
+        </div>
+    </div>
+
+    <!-- ══ PANEL MAPA VISUAL ══ -->
+    <div id="panel-mapa" class="panel">
+        <div class="mapa-toolbar">
+            <h2 style="color: #f1f5f9; margin-right: 16px;">Mapa de Ubicaciones</h2>
+            <div class="mapa-search-bar">
+                <input type="text" id="mapaBuscar" placeholder="🔍 Buscar artículo por código o descripción...">
+            </div>
+        </div>
+        <div class="mapa-canvas-wrap">
+            <div id="mapaCanvas"></div>
+        </div>
+        <div id="detailPanel" class="detail-panel">
+            <h3 id="detailTitle">—</h3>
+            <ul id="detailList" class="detail-list"></ul>
+        </div>
+    </div>
+
+    <!-- ══ PANEL UBICACIONES ══ -->
+    <div id="panel-ubicaciones" class="panel">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
+            <h2 style="color:#f1f5f9;">Gestionar Ubicaciones</h2>
+            <button class="btn btn-primary" onclick="abrirModalUbicacion()">+ Nueva ubicación</button>
+        </div>
+        <div id="ubicGrid" class="ubic-grid"></div>
+    </div>
+</div>
+
+<!-- ══ MODAL ARTÍCULO ══ -->
+<div id="modalArticulo" class="modal-overlay">
+    <div class="modal">
+        <h2 id="modalTitle">Nuevo Artículo</h2>
+        <input type="hidden" id="artId">
+        <div class="form-group">
+            <label>Código *</label>
+            <input type="text" id="artCodigo" placeholder="Ej: ART-001, SKU123">
+        </div>
+        <div class="form-group">
+            <label>Descripción *</label>
+            <input type="text" id="artDescripcion" placeholder="Descripción del artículo">
+        </div>
+        <div class="form-group">
+            <label>Medida</label>
+            <select id="artMedida">
+                <option value="">Sin especificar</option>
+                <option value="Blister">Blister</option>
+                <option value="Caja">Caja</option>
+                <option value="Unidad">Unidad</option>
+                <option value="Paquete">Paquete</option>
+                <option value="Bolsa">Bolsa</option>
+                <option value="Frasco">Frasco</option>
+                <option value="Tubo">Tubo</option>
+                <option value="Sobre">Sobre</option>
+                <option value="Otro">Otro</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Ubicación</label>
+            <select id="artUbicacion">
+                <option value="">Sin ubicación</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Notas</label>
+            <textarea id="artNotas" placeholder="Notas adicionales (opcional)"></textarea>
+        </div>
+        <div class="form-actions">
+            <button class="btn btn-ghost" onclick="cerrarModal()">Cancelar</button>
+            <button class="btn btn-success" onclick="guardarArticulo()">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<!-- ══ MODAL UBICACIÓN ══ -->
+<div id="modalUbicacion" class="modal-overlay">
+    <div class="modal">
+        <h2 id="modalUbicTitle">Nueva Ubicación</h2>
+        <input type="hidden" id="ubicId">
+        <div class="form-group">
+            <label>Código *</label>
+            <input type="text" id="ubicCodigo" placeholder="Ej: A1, B2, MESA1">
+        </div>
+        <div class="form-group">
+            <label>Descripción</label>
+            <input type="text" id="ubicDescripcion" placeholder="Descripción de la ubicación">
+        </div>
+        <div style="display:flex; gap:12px;">
+            <div class="form-group" style="flex:1;">
+                <label>Fila</label>
+                <input type="number" id="ubicFila" placeholder="Ej: 1, 2, 3..." min="1">
+            </div>
+            <div class="form-group" style="flex:1;">
+                <label>Columna</label>
+                <input type="number" id="ubicColumna" placeholder="Ej: 1, 2, 3..." min="1">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Color</label>
+            <input type="color" id="ubicColor" value="#3b82f6" style="height:40px; cursor:pointer;">
+        </div>
+        <div class="form-actions">
+            <button class="btn btn-ghost" onclick="cerrarModalUbicacion()">Cancelar</button>
+            <button class="btn btn-success" onclick="guardarUbicacion()">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const API = 'api.php';
+let ubicacionesCache = [];
+let debounceTimer = null;
+
+// ── INIT ──
+document.addEventListener('DOMContentLoaded', () => {
+    cargarUbicacionesSelect();
+    cargarArticulos();
+
+    document.getElementById('txtBuscar').addEventListener('input', () => {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(cargarArticulos, 300);
+    });
+    document.getElementById('selUbicacion').addEventListener('change', cargarArticulos);
+
+    document.querySelectorAll('.nav-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            tab.classList.add('active');
+            document.getElementById('panel-' + tab.dataset.panel).classList.add('active');
+
+            if (tab.dataset.panel === 'mapa') cargarMapa();
+            if (tab.dataset.panel === 'ubicaciones') cargarUbicacionesPanel();
+        });
+    });
+});
+
+// ── ARTÍCULOS ──
+async function cargarArticulos() {
+    const q = document.getElementById('txtBuscar').value;
+    const ub = document.getElementById('selUbicacion').value;
+    const params = new URLSearchParams({ action: 'listar' });
+    if (q) params.set('q', q);
+    if (ub) params.set('ubicacion', ub);
+
+    const res = await fetch(`${API}?${params}`);
+    const datos = await res.json();
+
+    const tbody = document.getElementById('tablaArticulos');
+    const noRes = document.getElementById('sinResultados');
+
+    if (datos.length === 0) {
+        tbody.innerHTML = '';
+        noRes.style.display = 'block';
+        return;
+    }
+    noRes.style.display = 'none';
+
+    tbody.innerHTML = datos.map(a => `
+        <tr>
+            <td><code style="color:#60a5fa">${esc(a.codigo)}</code></td>
+            <td>${esc(a.descripcion)}</td>
+            <td>${a.medida ? `<span class="badge" style="background:#8b5cf620; color:#8b5cf6">${esc(a.medida)}</span>` : '<span style="color:#64748b">—</span>'}</td>
+            <td>${a.ubicacion_codigo
+                ? `<span class="badge" style="background:${esc(a.ubicacion_color)}20; color:${esc(a.ubicacion_color)}">${esc(a.ubicacion_codigo)}</span>`
+                : '<span style="color:#64748b">—</span>'}</td>
+            <td>${a.ubicacion_fila && a.ubicacion_columna
+                ? `<span style="color:#f59e0b; font-weight:600; font-family:monospace">${a.ubicacion_fila}×${a.ubicacion_columna}</span>`
+                : '<span style="color:#64748b">—</span>'}</td>
+            <td style="color:#94a3b8; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">${esc(a.notas || '')}</td>
+            <td>
+                <button class="btn btn-sm btn-ghost" onclick='editarArticulo(${JSON.stringify(a).replace(/'/g, "&#39;")})'>✏️</button>
+                <button class="btn btn-sm btn-danger" onclick="eliminarArticulo(${a.id})">🗑</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function abrirModalCrear() {
+    document.getElementById('modalTitle').textContent = 'Nuevo Artículo';
+    document.getElementById('artId').value = '';
+    document.getElementById('artCodigo').value = '';
+    document.getElementById('artDescripcion').value = '';
+    document.getElementById('artMedida').value = '';
+    document.getElementById('artUbicacion').value = '';
+    document.getElementById('artNotas').value = '';
+    document.getElementById('modalArticulo').classList.add('show');
+    document.getElementById('artCodigo').focus();
+}
+
+function editarArticulo(a) {
+    document.getElementById('modalTitle').textContent = 'Editar Artículo';
+    document.getElementById('artId').value = a.id;
+    document.getElementById('artCodigo').value = a.codigo;
+    document.getElementById('artDescripcion').value = a.descripcion;
+    document.getElementById('artMedida').value = a.medida || '';
+    document.getElementById('artUbicacion').value = a.ubicacion_id || '';
+    document.getElementById('artNotas').value = a.notas || '';
+    document.getElementById('modalArticulo').classList.add('show');
+}
+
+function cerrarModal() {
+    document.getElementById('modalArticulo').classList.remove('show');
+}
+
+async function guardarArticulo() {
+    const id = document.getElementById('artId').value;
+    const data = {
+        codigo: document.getElementById('artCodigo').value,
+        descripcion: document.getElementById('artDescripcion').value,
+        medida: document.getElementById('artMedida').value,
+        ubicacion_id: document.getElementById('artUbicacion').value || null,
+        notas: document.getElementById('artNotas').value,
+    };
+
+    if (!data.codigo || !data.descripcion) {
+        toast('Código y descripción son obligatorios', 'error');
+        return;
+    }
+
+    const action = id ? 'actualizar' : 'crear';
+    if (id) data.id = parseInt(id);
+
+    try {
+        const res = await fetch(`${API}?action=${action}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        const result = await res.json();
+        if (result.error) throw new Error(result.error);
+        toast(result.mensaje, 'success');
+        cerrarModal();
+        cargarArticulos();
+    } catch (e) {
+        toast(e.message || 'Error al guardar', 'error');
+    }
+}
+
+async function eliminarArticulo(id) {
+    if (!confirm('¿Eliminar este artículo?')) return;
+    try {
+        const res = await fetch(`${API}?action=eliminar`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id }),
+        });
+        const result = await res.json();
+        toast(result.mensaje, 'success');
+        cargarArticulos();
+    } catch (e) {
+        toast('Error al eliminar', 'error');
+    }
+}
+
+// ── UBICACIONES ──
+async function cargarUbicacionesSelect() {
+    const res = await fetch(`${API}?action=ubicaciones`);
+    ubicacionesCache = await res.json();
+
+    const opts = '<option value="">Todas las ubicaciones</option>' +
+        ubicacionesCache.map(u => `<option value="${esc(u.codigo)}">${esc(u.codigo)} - ${esc(u.descripcion)}</option>`).join('');
+    document.getElementById('selUbicacion').innerHTML = opts;
+
+    const opts2 = '<option value="">Sin ubicación</option>' +
+        ubicacionesCache.map(u => `<option value="${u.id}">${esc(u.codigo)} - ${esc(u.descripcion)}</option>`).join('');
+    document.getElementById('artUbicacion').innerHTML = opts2;
+}
+
+async function cargarUbicacionesPanel() {
+    const res = await fetch(`${API}?action=ubicaciones`);
+    const datos = await res.json();
+
+    document.getElementById('ubicGrid').innerHTML = datos.map(u => `
+        <div class="ubic-card">
+            <div class="ubic-dot" style="background:${esc(u.color)}"></div>
+            <div class="ubic-info">
+                <div class="ubic-code">${esc(u.codigo)} ${u.fila && u.columna ? `<span style="color:#f59e0b; font-size:12px; font-weight:400">(${u.fila}×${u.columna})</span>` : ''}</div>
+                <div class="ubic-desc">${esc(u.descripcion)}</div>
+                <div class="ubic-count">${u.total_articulos} artículo(s)</div>
+            </div>
+            <button class="btn btn-sm btn-ghost" onclick='editarUbicacion(${JSON.stringify(u).replace(/'/g, "&#39;")})' title="Editar">✏️</button>
+            <button class="btn btn-sm btn-danger" onclick="eliminarUbicacion(${u.id})" title="Eliminar">🗑</button>
+        </div>
+    `).join('');
+}
+
+function abrirModalUbicacion() {
+    document.getElementById('modalUbicTitle').textContent = 'Nueva Ubicación';
+    document.getElementById('ubicId').value = '';
+    document.getElementById('ubicCodigo').value = '';
+    document.getElementById('ubicDescripcion').value = '';
+    document.getElementById('ubicFila').value = '';
+    document.getElementById('ubicColumna').value = '';
+    document.getElementById('ubicColor').value = '#3b82f6';
+    document.getElementById('modalUbicacion').classList.add('show');
+    document.getElementById('ubicCodigo').focus();
+}
+
+function editarUbicacion(u) {
+    document.getElementById('modalUbicTitle').textContent = 'Editar Ubicación';
+    document.getElementById('ubicId').value = u.id;
+    document.getElementById('ubicCodigo').value = u.codigo;
+    document.getElementById('ubicDescripcion').value = u.descripcion || '';
+    document.getElementById('ubicFila').value = u.fila || '';
+    document.getElementById('ubicColumna').value = u.columna || '';
+    document.getElementById('ubicColor').value = u.color || '#3b82f6';
+    document.getElementById('modalUbicacion').classList.add('show');
+    document.getElementById('ubicCodigo').focus();
+}
+
+function cerrarModalUbicacion() {
+    document.getElementById('modalUbicacion').classList.remove('show');
+}
+
+async function guardarUbicacion() {
+    const id = document.getElementById('ubicId').value;
+    const data = {
+        codigo: document.getElementById('ubicCodigo').value,
+        descripcion: document.getElementById('ubicDescripcion').value,
+        fila: document.getElementById('ubicFila').value || null,
+        columna: document.getElementById('ubicColumna').value || null,
+        color: document.getElementById('ubicColor').value,
+    };
+    if (!data.codigo) { toast('Código obligatorio', 'error'); return; }
+
+    const action = id ? 'ubicacion_actualizar' : 'ubicacion_crear';
+    if (id) data.id = parseInt(id);
+
+    try {
+        const res = await fetch(`${API}?action=${action}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        const result = await res.json();
+        if (result.error) throw new Error(result.error);
+        toast(result.mensaje, 'success');
+        cerrarModalUbicacion();
+        cargarUbicacionesSelect();
+        cargarUbicacionesPanel();
+    } catch (e) {
+        toast(e.message || 'Error al guardar', 'error');
+    }
+}
+
+async function eliminarUbicacion(id) {
+    if (!confirm('¿Eliminar esta ubicación? Los artículos quedarán sin ubicar.')) return;
+    try {
+        const res = await fetch(`${API}?action=ubicacion_eliminar`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id }),
+        });
+        const result = await res.json();
+        toast(result.mensaje, 'success');
+        cargarUbicacionesSelect();
+        cargarUbicacionesPanel();
+    } catch (e) {
+        toast('Error al eliminar', 'error');
+    }
+}
+
+// ── MAPA VISUAL (grilla por fila×columna) ──
+let mapaData = [];
+let mapaSearchTimer = null;
+
+async function cargarMapa() {
+    const res = await fetch(`${API}?action=mapa`);
+    mapaData = await res.json();
+    renderMapa();
+
+    // Init search
+    const input = document.getElementById('mapaBuscar');
+    input.removeEventListener('input', onMapaSearch);
+    input.addEventListener('input', onMapaSearch);
+}
+
+function renderMapa() {
+    const canvas = document.getElementById('mapaCanvas');
+
+    let maxFila = 0, maxCol = 0;
+    const withGrid = mapaData.filter(u => u.fila && u.columna);
+    const withoutGrid = mapaData.filter(u => !u.fila || !u.columna);
+
+    withGrid.forEach(u => {
+        if (parseInt(u.fila) > maxFila) maxFila = parseInt(u.fila);
+        if (parseInt(u.columna) > maxCol) maxCol = parseInt(u.columna);
+    });
+
+    if (withGrid.length === 0 && withoutGrid.length > 0) {
+        canvas.innerHTML = `
+            <div style="padding:40px; text-align:center; color:#64748b;">
+                <p style="font-size:16px; margin-bottom:8px;">Las ubicaciones aún no tienen fila y columna asignadas.</p>
+                <p>Ve a <strong>Ubicaciones</strong> y edita cada una para asignarles su fila y columna.</p>
+            </div>`;
+        return;
+    }
+    if (maxFila === 0 && maxCol === 0) {
+        canvas.innerHTML = '<div style="padding:40px; text-align:center; color:#64748b;">No hay ubicaciones creadas aún.</div>';
+        return;
+    }
+
+    const grid = {};
+    withGrid.forEach(u => { grid[`${u.fila}-${u.columna}`] = u; });
+
+    let html = '<table class="mapa-grid-table"><thead><tr>';
+    html += '<th class="mapa-header-cell mapa-corner"></th>';
+    for (let c = 1; c <= maxCol; c++) {
+        html += `<th class="mapa-header-cell mapa-header-col">Col ${c}</th>`;
+    }
+    html += '</tr></thead><tbody>';
+
+    for (let f = 1; f <= maxFila; f++) {
+        html += `<tr><td class="mapa-header-cell mapa-header-row">Fila ${f}</td>`;
+        for (let c = 1; c <= maxCol; c++) {
+            const u = grid[`${f}-${c}`];
+            if (u) {
+                html += `<td class="mapa-cell">
+                    <div class="mapa-card" data-id="${u.id}" data-codigo="${esc(u.codigo)}" onclick="verDetalleMapa('${esc(u.codigo)}')"
+                         style="background:${esc(u.color)}20; border-color:${esc(u.color)}40">
+                        <div class="code" style="color:${esc(u.color)}">${esc(u.codigo)}</div>
+                        <div class="desc">${esc(u.descripcion)}</div>
+                        <div class="pos-label">📍 F${u.fila} × C${u.columna}</div>
+                        <div class="count">${u.total_articulos}</div>
+                        <div class="count-label">artículo${u.total_articulos != 1 ? 's' : ''}</div>
+                        <div class="mapa-card-bg" style="color:${esc(u.color)}">${esc(u.codigo)}</div>
+                    </div>
+                </td>`;
+            } else {
+                html += `<td class="mapa-cell"><div class="mapa-empty-cell"></div></td>`;
+            }
+        }
+        html += '</tr>';
+    }
+    html += '</tbody></table>';
+
+    if (withoutGrid.length > 0) {
+        html += `<div style="padding:16px; border-top:1px solid #334155; margin-top:8px;">
+            <div style="font-size:13px; color:#94a3b8; margin-bottom:10px;">⚠️ Sin fila/columna asignada (edítalas en Ubicaciones):</div>
+            <div style="display:flex; flex-wrap:wrap; gap:8px;">`;
+        withoutGrid.forEach(u => {
+            html += `<div class="mapa-card" data-id="${u.id}" data-codigo="${esc(u.codigo)}" onclick="verDetalleMapa('${esc(u.codigo)}')"
+                 style="background:${esc(u.color)}20; border-color:${esc(u.color)}40">
+                <div class="code" style="color:${esc(u.color)}">${esc(u.codigo)}</div>
+                <div class="desc">${esc(u.descripcion)}</div>
+                <div class="count">${u.total_articulos}</div>
+                <div class="count-label">artículo${u.total_articulos != 1 ? 's' : ''}</div>
+                <div class="mapa-card-bg" style="color:${esc(u.color)}">${esc(u.codigo)}</div>
+            </div>`;
+        });
+        html += '</div></div>';
+    }
+
+    canvas.innerHTML = html;
+}
+
+function verDetalleMapa(codigoUbicacion) {
+    // Select card
+    document.querySelectorAll('.mapa-card').forEach(c => c.classList.remove('selected'));
+    const card = document.querySelector(`.mapa-card[data-codigo="${codigoUbicacion}"]`);
+    if (card) card.classList.add('selected');
+    verDetalle(codigoUbicacion);
+}
+
+// ── BÚSQUEDA EN MAPA ──
+function onMapaSearch() {
+    clearTimeout(mapaSearchTimer);
+    mapaSearchTimer = setTimeout(() => buscarEnMapa(), 400);
+}
+
+async function buscarEnMapa() {
+    const q = document.getElementById('mapaBuscar').value.trim();
+
+    // Clear previous highlights
+    document.querySelectorAll('.mapa-card.highlighted').forEach(c => c.classList.remove('highlighted'));
+
+    if (!q) return;
+
+    const res = await fetch(`${API}?action=listar&q=${encodeURIComponent(q)}`);
+    const articulos = await res.json();
+
+    if (articulos.length === 0) {
+        toast('No se encontraron artículos con esa búsqueda', 'error');
+        return;
+    }
+
+    const ubicCodigosSet = new Set();
+    articulos.forEach(a => { if (a.ubicacion_codigo) ubicCodigosSet.add(a.ubicacion_codigo); });
+
+    if (ubicCodigosSet.size === 0) {
+        toast('Los artículos encontrados no tienen ubicación asignada', 'error');
+        return;
+    }
+
+    let firstCard = null;
+    ubicCodigosSet.forEach(codigo => {
+        const card = document.querySelector(`.mapa-card[data-codigo="${codigo}"]`);
+        if (card) {
+            card.classList.add('highlighted');
+            if (!firstCard) firstCard = card;
+        }
+    });
+
+    if (firstCard) {
+        firstCard.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+    }
+
+    toast(`Encontrado en ${ubicCodigosSet.size} ubicación(es): ${[...ubicCodigosSet].join(', ')}`, 'success');
+
+    // Stop animation after 6 seconds
+    setTimeout(() => {
+        document.querySelectorAll('.mapa-card.highlighted').forEach(c => c.classList.remove('highlighted'));
+    }, 6000);
+}
+
+async function verDetalle(codigoUbicacion) {
+    const res = await fetch(`${API}?action=listar&ubicacion=${encodeURIComponent(codigoUbicacion)}`);
+    const datos = await res.json();
+
+    // Buscar info de ubicación en mapaData
+    const ubic = mapaData.find(u => u.codigo === codigoUbicacion);
+    const posInfo = ubic && ubic.fila && ubic.columna ? ` (Fila ${ubic.fila} × Columna ${ubic.columna})` : '';
+
+    const panel = document.getElementById('detailPanel');
+    document.getElementById('detailTitle').textContent = `Artículos en ${codigoUbicacion}${posInfo}`;
+
+    if (datos.length === 0) {
+        document.getElementById('detailList').innerHTML = '<li style="color:#64748b">Sin artículos en esta ubicación</li>';
+    } else {
+        document.getElementById('detailList').innerHTML = datos.map(a => `
+            <li>
+                <span>${esc(a.descripcion)}${a.medida ? ` <span class="badge" style="background:#8b5cf620;color:#8b5cf6;font-size:11px">${esc(a.medida)}</span>` : ''}</span>
+                <span class="item-code">${esc(a.codigo)}</span>
+            </li>
+        `).join('');
+    }
+    panel.classList.add('show');
+}
+
+// ── UTILS ──
+function esc(str) {
+    const div = document.createElement('div');
+    div.textContent = str ?? '';
+    return div.innerHTML;
+}
+
+function toast(msg, type) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = `toast toast-${type} show`;
+    setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// Cerrar modales con Escape
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+        cerrarModal();
+        cerrarModalUbicacion();
+    }
+});
+</script>
+</body>
+</html>
